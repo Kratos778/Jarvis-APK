@@ -1,0 +1,43 @@
+name: CI
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    env:
+      ANDROID_HOME: /usr/local/lib/android/sdk
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+
+      - uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '8.9'
+
+      - name: Accept Android licenses & install packages
+        run: |
+          SDKMANAGER=$(find $ANDROID_HOME -name sdkmanager | head -1)
+          yes | $SDKMANAGER --licenses >/dev/null 2>&1 || true
+          $SDKMANAGER "platform-tools" "platforms;android-35" "build-tools;35.0.0"
+
+      - name: Build Debug APK
+        run: gradle assembleDebug --stacktrace --no-daemon
+
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        if: success()
+        with:
+          name: Jarvis.apk
+          path: app/build/outputs/apk/debug/Jarvis.apk
+          retention-days: 14

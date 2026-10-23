@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Jarvis</string>
+    <string name="hint_message">Escreve ou usa o microfone…</string>
+    <string name="send">Enviar</string>
+    <string name="listening">A ouvir…</string>
+    <string name="permission_mic">Preciso do microfone para te ouvir.</string>
+    <string name="welcome">Às suas ordens. Em que posso ajudar?</string>
+</resources>
