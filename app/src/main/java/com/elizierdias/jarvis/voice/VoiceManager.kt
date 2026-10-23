@@ -18,19 +18,30 @@ class VoiceManager(
     private val appContext = context.applicationContext
     private var ttsReady = false
     private var recognizer: SpeechRecognizer? = null
+    private var tts: TextToSpeech? = null
 
-    private val tts = TextToSpeech(appContext) { status ->
-        ttsReady = status == TextToSpeech.SUCCESS
-        if (ttsReady) {
-            val pt = Locale("pt", "PT")
-            val br = Locale("pt", "BR")
-            when {
-                tts.isLanguageAvailable(br) >= TextToSpeech.LANG_AVAILABLE ->
-                    tts.language = br
-                tts.isLanguageAvailable(pt) >= TextToSpeech.LANG_AVAILABLE ->
-                    tts.language = pt
-                else -> tts.language = Locale.getDefault()
+    init {
+        tts = TextToSpeech(appContext) { status ->
+            if (status == TextToSpeech.SUCCESS) {
+                configureLanguage()
+                ttsReady = true
+            } else {
+                ttsReady = false
             }
+        }
+    }
+
+    private fun configureLanguage() {
+        val engine = tts ?: return
+        val br = Locale("pt", "BR")
+        val pt = Locale("pt", "PT")
+        when {
+            engine.isLanguageAvailable(br) >= TextToSpeech.LANG_AVAILABLE ->
+                engine.language = br
+            engine.isLanguageAvailable(pt) >= TextToSpeech.LANG_AVAILABLE ->
+                engine.language = pt
+            else ->
+                engine.language = Locale.getDefault()
         }
     }
 
@@ -87,13 +98,18 @@ class VoiceManager(
     }
 
     fun speak(text: String) {
+        val engine = tts ?: return
         if (!ttsReady) return
-        tts.speak(text, TextToSpeech.QUEUE_FLUSH, null, "jarvis-utt")
+        engine.speak(text, TextToSpeech.QUEUE_FLUSH, null, "jarvis-utt")
     }
 
     fun shutdown() {
         stopListening()
-        tts.stop()
-        tts.shutdown()
+        try {
+            tts?.stop()
+            tts?.shutdown()
+        } catch (_: Exception) { }
+        tts = null
+        ttsReady = false
     }
 }
