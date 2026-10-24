@@ -26,6 +26,10 @@ class AiEngine(private val context: Context) {
         get() = prefs.getString("groq_api_key", "") ?: ""
         set(value) = prefs.edit().putString("groq_api_key", value.trim()).apply()
 
+    // Modelo disponível no free tier do Groq (outubro 2026)
+    // llama-3.1-8b-instant foi removido do free tier em agosto 2026
+    private val model = "openai/gpt-oss-20b"
+
     private val systemPrompt = """
         És o J.A.R.V.I.S., o assistente pessoal do utilizador, inspirado no Jarvis do Tony Stark.
         Fala sempre em português de Portugal, de forma elegante, confiante e útil.
@@ -45,7 +49,7 @@ class AiEngine(private val context: Context) {
         // 2. Se não tem chave, avisa
         if (apiKey.isBlank()) {
             return@withContext "Ainda não configurei o meu cérebro. " +
-                "Vai a Definições → cola a tua chave gratuita do Groq (console.groq.com) e volta a falar comigo."
+                "Toca longamente no título J.A.R.V.I.S. para colar a tua chave gratuita do Groq (console.groq.com)."
         }
 
         // 3. Chama o Groq
@@ -119,7 +123,7 @@ class AiEngine(private val context: Context) {
         conn.readTimeout = 30000
 
         val body = JSONObject().apply {
-            put("model", "llama-3.1-8b-instant") // rápido e generoso no free tier
+            put("model", model)
             put("temperature", 0.7)
             put("max_tokens", 512)
             put("messages", JSONArray().apply {
@@ -135,7 +139,6 @@ class AiEngine(private val context: Context) {
         val response = stream.bufferedReader().use { it.readText() }
 
         if (code !in 200..299) {
-            // Tenta extrair mensagem de erro útil
             return try {
                 val err = JSONObject(response).optJSONObject("error")?.optString("message")
                 "Erro do Groq ($code): ${err ?: response.take(120)}"
