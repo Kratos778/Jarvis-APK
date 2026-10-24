@@ -1,12 +1,12 @@
 package com.elizierdias.jarvis.ai
 
+import android.app.SearchManager
 import android.content.Context
 import android.content.Intent
 import android.content.SharedPreferences
-import android.content.pm.PackageManager
 import android.media.AudioManager
-import android.net.Uri
 import android.provider.AlarmClock
+import android.provider.MediaStore
 import android.provider.Settings
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -57,13 +57,11 @@ class AiEngine(private val context: Context) {
     private fun localCommand(raw: String): String? {
         val t = raw.lowercase().trim()
 
-        // --- Saudações ---
         if (t.contains("olá") || t.contains("ola") || t.contains("hey jarvis") ||
             t.contains("oi jarvis") || t == "jarvis" || t.contains("bom dia") ||
             t.contains("boa tarde") || t.contains("boa noite")
         ) return "Às suas ordens. Em que posso ajudar?"
 
-        // --- Horas / Data ---
         if (t.contains("horas") || t.contains("que horas") || t.contains("hora é")) {
             val cal = Calendar.getInstance()
             return "São %02d:%02d, senhor.".format(
@@ -79,61 +77,46 @@ class AiEngine(private val context: Context) {
             )
         }
 
-        // --- Despertador / Alarme ---
-        if (t.contains("alarme") || t.contains("despertador") || t.contains("acordar")) {
+        if (t.contains("alarme") || t.contains("despertador") || t.contains("acordar"))
             return setAlarmFromText(t)
-        }
-        if (t.contains("temporizador") || t.contains("timer") || t.contains("cronómetro") || t.contains("cronometro")) {
+        if (t.contains("temporizador") || t.contains("timer") || t.contains("cronómetro") || t.contains("cronometro"))
             return setTimerFromText(t)
-        }
 
-        // --- Música ---
         if (t.contains("música") || t.contains("musica") || t.contains("toca") ||
             t.contains("play") || t.contains("spotify") || t.contains("ouvir")
-        ) {
-            return playMusic(t)
-        }
-        if (t.contains("pausa") || t.contains("pause") || t.contains("parar música") || t.contains("para a música")) {
+        ) return playMusic(t)
+
+        if (t.contains("pausa") || t.contains("pause") || t.contains("parar música") || t.contains("para a música"))
             return pauseMusic()
-        }
-        if (t.contains("próxima") || t.contains("proxima") || t.contains("seguinte") || t.contains("next")) {
+        if (t.contains("próxima") || t.contains("proxima") || t.contains("seguinte") || t.contains("next"))
             return skipTrack()
-        }
 
-        // --- Volume ---
-        if (t.contains("volume mais") || t.contains("aumenta o volume") || t.contains("mais alto")) {
+        if (t.contains("volume mais") || t.contains("aumenta o volume") || t.contains("mais alto"))
             return changeVolume(true)
-        }
-        if (t.contains("volume menos") || t.contains("diminui o volume") || t.contains("mais baixo")) {
+        if (t.contains("volume menos") || t.contains("diminui o volume") || t.contains("mais baixo"))
             return changeVolume(false)
-        }
 
-        // --- Apps / Definições ---
-        if (t.contains("definições") || t.contains("configurações") || t.contains("settings")) {
+        if (t.contains("definições") || t.contains("configurações") || t.contains("settings"))
             return openSettings()
-        }
         if (t.contains("youtube")) return openApp("com.google.android.youtube", "YouTube")
         if (t.contains("chrome") || t.contains("navegador")) return openApp("com.android.chrome", "Chrome")
         if (t.contains("whatsapp")) return openApp("com.whatsapp", "WhatsApp")
         if (t.contains("instagram")) return openApp("com.instagram.android", "Instagram")
-        if (t.contains("câmara") || t.contains("camera") || t.contains("foto")) {
-            return openAppByAction(android.provider.MediaStore.ACTION_IMAGE_CAPTURE, "câmara")
-        }
+        if (t.contains("câmara") || t.contains("camera") || t.contains("foto"))
+            return openAppByAction(MediaStore.ACTION_IMAGE_CAPTURE, "câmara")
 
-        // --- Identidade ---
         if (t.contains("quem és") || t.contains("quem e voce") || t.contains("quem é você") || t.contains("o que és"))
             return "Sou o Jarvis, o teu assistente pessoal. Sempre às tuas ordens."
         if (t.contains("obrigado") || t.contains("obrigada"))
             return "De nada. Estou sempre aqui."
         if (t.contains("ajuda") || t.contains("o que podes") || t.contains("comandos"))
-            return "Posso dizer as horas, pôr alarmes, tocar música, controlar o volume, " +
-                "abrir apps (YouTube, WhatsApp, Chrome…) e conversar quando o cérebro estiver ligado."
+            return "Posso dizer as horas, pôr alarmes e temporizadores, tocar música, " +
+                "controlar o volume, abrir apps e conversar quando o cérebro estiver ligado."
 
         return null
     }
 
     private fun setAlarmFromText(t: String): String {
-        // Procura padrões tipo "7:30", "7 e meia", "8 horas"
         val hourMin = Regex("(\\d{1,2})\\s*[:hH]\\s*(\\d{1,2})?").find(t)
         val hourOnly = Regex("(\\d{1,2})\\s*horas?").find(t)
 
@@ -141,11 +124,13 @@ class AiEngine(private val context: Context) {
         val minute: Int
         when {
             hourMin != null -> {
-                hour = hourMin.groupValues[1].toIntOrNull() ?: return "Diz a hora, por exemplo: alarme para as 7:30"
+                hour = hourMin.groupValues[1].toIntOrNull()
+                    ?: return "Diz a hora, por exemplo: alarme para as 7:30"
                 minute = hourMin.groupValues.getOrNull(2)?.toIntOrNull() ?: 0
             }
             hourOnly != null -> {
-                hour = hourOnly.groupValues[1].toIntOrNull() ?: return "Diz a hora, por exemplo: alarme para as 7 horas"
+                hour = hourOnly.groupValues[1].toIntOrNull()
+                    ?: return "Diz a hora, por exemplo: alarme para as 7 horas"
                 minute = if (t.contains("meia")) 30 else 0
             }
             else -> return "Diz a hora do alarme, por exemplo: alarme para as 7:30"
@@ -162,7 +147,7 @@ class AiEngine(private val context: Context) {
             context.startActivity(intent)
             "A configurar o alarme para as %02d:%02d.".format(hour, minute)
         } catch (_: Exception) {
-            "Não consegui abrir o despertador. Verifica se tens uma app de relógio instalada."
+            "Não consegui abrir o despertador."
         }
     }
 
@@ -188,37 +173,30 @@ class AiEngine(private val context: Context) {
     }
 
     private fun playMusic(t: String): String {
-        // Extrai possível nome da música/artista
         val query = t
             .replace(Regex("(toca|play|música|musica|spotify|ouvir|põe|poe)", RegexOption.IGNORE_CASE), "")
             .trim()
             .ifBlank { null }
 
-        // Tenta Media Play From Search (funciona com Spotify, YT Music, etc.)
         return try {
             val intent = Intent(MediaStore.INTENT_ACTION_MEDIA_PLAY_FROM_SEARCH).apply {
                 putExtra(SearchManager.QUERY, query ?: "")
-                putExtra(MediaStore.EXTRA_MEDIA_FOCUS, "vnd.android.cursor.item/*")
                 addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
             }
-            // Fallbacks manuais se o intent genérico falhar
             if (intent.resolveActivity(context.packageManager) != null) {
                 context.startActivity(intent)
                 if (query != null) "A procurar «$query» no leitor de música."
                 else "A retomar a música."
-            } else {
-                // Abre Spotify ou YT Music
-                when {
-                    isInstalled("com.spotify.music") -> {
-                        openApp("com.spotify.music", "Spotify")
-                        "A abrir o Spotify."
-                    }
-                    isInstalled("com.google.android.apps.youtube.music") -> {
-                        openApp("com.google.android.apps.youtube.music", "YouTube Music")
-                        "A abrir o YouTube Music."
-                    }
-                    else -> "Não encontrei um leitor de música. Instala Spotify ou YouTube Music."
+            } else when {
+                isInstalled("com.spotify.music") -> {
+                    openApp("com.spotify.music", "Spotify")
+                    "A abrir o Spotify."
                 }
+                isInstalled("com.google.android.apps.youtube.music") -> {
+                    openApp("com.google.android.apps.youtube.music", "YouTube Music")
+                    "A abrir o YouTube Music."
+                }
+                else -> "Não encontrei um leitor de música. Instala Spotify ou YouTube Music."
             }
         } catch (_: Exception) {
             "Não consegui controlar a música."
@@ -228,11 +206,10 @@ class AiEngine(private val context: Context) {
     private fun pauseMusic(): String {
         return try {
             val am = context.getSystemService(Context.AUDIO_SERVICE) as AudioManager
-            // Envia evento de media pause via AudioManager (funciona na maioria dos players)
-            val event = android.view.KeyEvent(android.view.KeyEvent.ACTION_DOWN, android.view.KeyEvent.KEYCODE_MEDIA_PAUSE)
-            am.dispatchMediaKeyEvent(event)
-            val eventUp = android.view.KeyEvent(android.view.KeyEvent.ACTION_UP, android.view.KeyEvent.KEYCODE_MEDIA_PAUSE)
-            am.dispatchMediaKeyEvent(eventUp)
+            val down = android.view.KeyEvent(android.view.KeyEvent.ACTION_DOWN, android.view.KeyEvent.KEYCODE_MEDIA_PAUSE)
+            val up = android.view.KeyEvent(android.view.KeyEvent.ACTION_UP, android.view.KeyEvent.KEYCODE_MEDIA_PAUSE)
+            am.dispatchMediaKeyEvent(down)
+            am.dispatchMediaKeyEvent(up)
             "Música em pausa."
         } catch (_: Exception) {
             "Não consegui pausar a música."
@@ -265,9 +242,7 @@ class AiEngine(private val context: Context) {
 
     private fun openSettings(): String {
         return try {
-            context.startActivity(
-                Intent(Settings.ACTION_SETTINGS).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-            )
+            context.startActivity(Intent(Settings.ACTION_SETTINGS).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
             "A abrir as definições do telemóvel."
         } catch (_: Exception) {
             "Não consegui abrir as definições."
@@ -281,9 +256,7 @@ class AiEngine(private val context: Context) {
                 launch.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
                 context.startActivity(launch)
                 "A abrir $label."
-            } else {
-                "$label não está instalado."
-            }
+            } else "$label não está instalado."
         } catch (_: Exception) {
             "Não consegui abrir $label."
         }
@@ -348,14 +321,5 @@ class AiEngine(private val context: Context) {
             .getJSONObject("message")
             .getString("content")
             .trim()
-    }
-
-    // Imports em falta usados acima
-    private object MediaStore {
-        const val INTENT_ACTION_MEDIA_PLAY_FROM_SEARCH = "android.media.action.MEDIA_PLAY_FROM_SEARCH"
-        const val EXTRA_MEDIA_FOCUS = "android.intent.extra.focus"
-    }
-    private object SearchManager {
-        const val QUERY = "query"
     }
 }

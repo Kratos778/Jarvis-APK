@@ -4,12 +4,37 @@
     android:layout_height="match_parent"
     android:background="@color/jarvis_bg">
 
+    <!-- Glow de fundo -->
     <View
-        android:id="@+id/splashRing"
-        android:layout_width="180dp"
-        android:layout_height="180dp"
+        android:id="@+id/splashGlow"
+        android:layout_width="280dp"
+        android:layout_height="280dp"
         android:layout_gravity="center"
-        android:background="@drawable/splash_ring" />
+        android:background="@drawable/splash_glow" />
+
+    <!-- Anel exterior -->
+    <View
+        android:id="@+id/splashRingOuter"
+        android:layout_width="200dp"
+        android:layout_height="200dp"
+        android:layout_gravity="center"
+        android:background="@drawable/splash_ring_outer" />
+
+    <!-- Anel interior -->
+    <View
+        android:id="@+id/splashRingInner"
+        android:layout_width="140dp"
+        android:layout_height="140dp"
+        android:layout_gravity="center"
+        android:background="@drawable/splash_ring_inner" />
+
+    <!-- Núcleo -->
+    <View
+        android:id="@+id/splashCore"
+        android:layout_width="48dp"
+        android:layout_height="48dp"
+        android:layout_gravity="center"
+        android:background="@drawable/splash_core" />
 
     <LinearLayout
         android:layout_width="match_parent"
@@ -17,6 +42,7 @@
         android:layout_gravity="center"
         android:gravity="center"
         android:orientation="vertical"
+        android:layout_marginTop="160dp"
         android:padding="24dp">
 
         <TextView
@@ -25,19 +51,23 @@
             android:layout_height="wrap_content"
             android:text="J.A.R.V.I.S."
             android:textColor="@color/jarvis_accent"
-            android:textSize="36sp"
+            android:textSize="34sp"
             android:textStyle="bold"
-            android:letterSpacing="0.25" />
+            android:letterSpacing="0.28"
+            android:shadowColor="#6632E6FF"
+            android:shadowDx="0"
+            android:shadowDy="0"
+            android:shadowRadius="18" />
 
         <TextView
             android:id="@+id/splashSubtitle"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginTop="12dp"
+            android:layout_marginTop="10dp"
             android:text="SISTEMA A INICIALIZAR"
             android:textColor="@color/text_secondary"
-            android:textSize="12sp"
-            android:letterSpacing="0.2" />
+            android:textSize="11sp"
+            android:letterSpacing="0.25" />
     </LinearLayout>
 
 </FrameLayout>

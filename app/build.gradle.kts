@@ -6,12 +6,14 @@ plugins {
 import java.util.Base64
 import java.io.FileOutputStream
 
-// Descodifica a chave fixa (permite atualizar o APK sem desinstalar)
 val keystoreFile = file("${rootProject.projectDir}/keystore/jarvis-debug.keystore")
 if (!keystoreFile.exists()) {
-    val b64 = file("${rootProject.projectDir}/keystore/jarvis-debug.b64").readText().trim()
-    keystoreFile.parentFile.mkdirs()
-    FileOutputStream(keystoreFile).use { it.write(Base64.getDecoder().decode(b64)) }
+    val b64File = file("${rootProject.projectDir}/keystore/jarvis-debug.b64")
+    if (b64File.exists()) {
+        val b64 = b64File.readText().trim()
+        keystoreFile.parentFile.mkdirs()
+        FileOutputStream(keystoreFile).use { it.write(Base64.getDecoder().decode(b64)) }
+    }
 }
 
 android {
@@ -22,8 +24,8 @@ android {
         applicationId = "com.elizierdias.jarvis"
         minSdk = 26
         targetSdk = 35
-        versionCode = 2
-        versionName = "1.1.0"
+        versionCode = 3
+        versionName = "1.2.0"
         setProperty("archivesBaseName", "Jarvis")
     }
 
