@@ -3,8 +3,10 @@ package com.elizierdias.jarvis
 import android.Manifest
 import android.content.pm.PackageManager
 import android.os.Bundle
+import android.widget.EditText
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.lifecycleScope
@@ -39,7 +41,7 @@ class MainActivity : AppCompatActivity() {
         ai = AiEngine(this)
         voice = VoiceManager(
             context = this,
-            onPartial = { /* opcional: mostrar texto parcial */ },
+            onPartial = { /* opcional */ },
             onResult = { text ->
                 binding.status.text = "ONLINE"
                 if (text.isNotBlank()) submitUserText(text)
@@ -56,7 +58,14 @@ class MainActivity : AppCompatActivity() {
         }
         binding.chatList.adapter = adapter
 
-        addMessage(ChatMessage(getString(R.string.welcome), fromUser = false), speak = true)
+        // Mensagem de boas-vindas
+        val welcome = if (ai.apiKey.isBlank()) {
+            "Às suas ordens. Ainda não tenho o cérebro ligado.\n" +
+                "Toca longamente no título J.A.R.V.I.S. para colar a tua chave gratuita do Groq."
+        } else {
+            getString(R.string.welcome)
+        }
+        addMessage(ChatMessage(welcome, fromUser = false), speak = true)
 
         binding.btnSend.setOnClickListener {
             val text = binding.input.text?.toString()?.trim().orEmpty()
@@ -69,6 +78,39 @@ class MainActivity : AppCompatActivity() {
         binding.btnMic.setOnClickListener {
             ensureMicAndListen()
         }
+
+        // Toque longo no título = configurar chave API
+        binding.title.setOnLongClickListener {
+            showApiKeyDialog()
+            true
+        }
+    }
+
+    private fun showApiKeyDialog() {
+        val input = EditText(this).apply {
+            hint = "gsk_... (chave do console.groq.com)"
+            setText(ai.apiKey)
+            setPadding(48, 32, 48, 32)
+            setTextColor(0xFFFFFFFF.toInt())
+            setHintTextColor(0x99FFFFFF.toInt())
+        }
+
+        AlertDialog.Builder(this)
+            .setTitle("Chave Groq (gratuita)")
+            .setMessage("Cria uma conta grátis em console.groq.com → API Keys → Create API Key e cola aqui.")
+            .setView(input)
+            .setPositiveButton("Guardar") { _, _ ->
+                ai.apiKey = input.text.toString()
+                val msg = if (ai.apiKey.isBlank()) {
+                    "Chave removida. Estou em modo local."
+                } else {
+                    "Chave guardada. Cérebro online."
+                }
+                Toast.makeText(this, msg, Toast.LENGTH_SHORT).show()
+                addMessage(ChatMessage(msg, fromUser = false), speak = true)
+            }
+            .setNegativeButton("Cancelar", null)
+            .show()
     }
 
     private fun ensureMicAndListen() {
