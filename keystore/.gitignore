@@ -1,0 +1,2 @@
+# A chave .keystore é gerada automaticamente a partir do .b64
+*.keystore

@@ -3,6 +3,17 @@ plugins {
     alias(libs.plugins.kotlin.android)
 }
 
+import java.util.Base64
+import java.io.FileOutputStream
+
+// Descodifica a chave fixa (permite atualizar o APK sem desinstalar)
+val keystoreFile = file("${rootProject.projectDir}/keystore/jarvis-debug.keystore")
+if (!keystoreFile.exists()) {
+    val b64 = file("${rootProject.projectDir}/keystore/jarvis-debug.b64").readText().trim()
+    keystoreFile.parentFile.mkdirs()
+    FileOutputStream(keystoreFile).use { it.write(Base64.getDecoder().decode(b64)) }
+}
+
 android {
     namespace = "com.elizierdias.jarvis"
     compileSdk = 35
@@ -16,10 +27,20 @@ android {
         setProperty("archivesBaseName", "Jarvis")
     }
 
+    signingConfigs {
+        create("jarvis") {
+            storeFile = keystoreFile
+            storePassword = "jarvisdebug"
+            keyAlias = "jarvis"
+            keyPassword = "jarvisdebug"
+        }
+    }
+
     buildTypes {
         release {
             isMinifyEnabled = true
             isShrinkResources = true
+            signingConfig = signingConfigs.getByName("jarvis")
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
@@ -27,6 +48,7 @@ android {
         }
         debug {
             isMinifyEnabled = false
+            signingConfig = signingConfigs.getByName("jarvis")
         }
     }
 

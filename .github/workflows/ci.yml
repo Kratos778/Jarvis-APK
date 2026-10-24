@@ -31,7 +31,7 @@ jobs:
           yes | $SDKMANAGER --licenses >/dev/null 2>&1 || true
           $SDKMANAGER "platform-tools" "platforms;android-35" "build-tools;35.0.0"
 
-      - name: Build Debug APK
+      - name: Build Debug APK (assinado com chave fixa)
         run: gradle assembleDebug --stacktrace --no-daemon
 
       - name: Upload APK
